@@ -107,5 +107,7 @@
 (check-equal? (translate-lc "(+ (* 2 4) (+ 5 6))") "((2 * 4) + (5 + 6))")
 (check-equal? (translate-lc "(* (* 2 a) (+ 5 6))") "((2 * a) * (5 + 6))")
 (check-equal? (translate-lc "(/ x => (* (+ x 2) 22))") "lambda x: ((x + 2) * 22)")
+(check-equal? (translate-lc "(/ x => (println 72))") "lambda x: print(72)")
 (check-equal? (translate-lc "(ifleq0 (+ 2 2) (* 4 2) (* 7 7))") "(4 * 2) if (2 + 2) <= 0 else (7 * 7)")
 (check-equal? (translate-lc "(println (ifleq0 (+ 2 2) (* 4 2) (* 7 7)))") "print((4 * 2) if (2 + 2) <= 0 else (7 * 7))")
+(check-equal? (translate-lc "(println (/ x => (* (+ x 2) 22)))") "print(lambda x: ((x + 2) * 22))")
