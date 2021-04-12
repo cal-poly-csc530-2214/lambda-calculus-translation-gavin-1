@@ -1,0 +1,89 @@
+#lang racket
+ 
+(require rackunit)
+ 
+#|LC	 	=	 	num
+                |	 	id
+                |	 	(/ id => LC)
+                |	 	(LC LC)
+                |	 	(+ LC LC)
+                |	 	(* LC LC)
+                |	 	(ifleq0 LC LC LC)
+                |	 	(println LC)|#
+ 
+(define (my-read str)
+  (call-with-input-string str read))
+
+(my-read "(/ x => (+ x 14))")
+
+;; determines whether a string represents a lambda
+(define (is-lam? str)
+  (is-lam?/stx (my-read str)))
+ 
+(define (is-lam?/stx stx)
+  (cond [(and (list? stx)
+              (= 4 (length stx))
+              (equal? (first stx) '/)
+              (symbol? (second stx))
+              (equal? (third stx) '=>))
+         #t]
+        [else #f])
+  )
+ 
+(check-equal? (is-lam? "(/ x => (+ x 14))") #true)
+(check-equal? (is-lam? "(+ x 14)") #false)
+ 
+;; translate prefix plus into infix plus
+(define (translate-add str)
+  (~a (translate-add/stx (my-read str))))
+ 
+;; translate prefix plus as a list into infix plus
+(define (translate-add/stx stx)
+  (cond [(number? stx) stx]
+        [(symbol? stx) stx]
+        [(and (list? stx)
+              (= 3 (length stx))
+              (equal? (first stx) '+))
+         (list (translate-add/stx (second stx))
+               '+
+               (translate-add/stx (third stx)))]
+        [else (error 'ta "bad input: ~v\n"
+                     stx)]))
+
+;; translate prefix plus into infix multi
+(define (translate-multi str)
+  (~a (translate-multi/stx (my-read str))))
+ 
+;; translate prefix plus as a list into infix multi
+(define (translate-multi/stx stx)
+  (cond [(number? stx) stx]
+        [(symbol? stx) stx]
+        [(and (list? stx)
+              (= 3 (length stx))
+              (equal? (first stx) '*))
+         (list (translate-multi/stx (second stx))
+               '*
+               (translate-multi/stx (third stx)))]
+        [else (error 'ta "bad input: ~v\n"
+                     stx)]))
+
+;; main program to convert LC to Python
+(define (translate-lc str)
+  (~a (translate-lc/stx (my-read str))))
+
+(define (translate-lc/stx stx)
+  (match (first stx)
+    ['/ ]
+    [#f '#f])
+  )
+
+(translate-add "(+ (+ 2 4) (+ 5 6))")
+(translate-multi "(* abc 3)")
+(is-lam? "(/ a => 24)")
+#;(
+   (+ (+ 4 5)
+   (+ (+ 5 6)
+      8)) 
+)
+
+(translate-lc "(/ abc => 12)")
